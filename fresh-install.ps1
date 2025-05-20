@@ -82,7 +82,7 @@ if ($Resume -and (Test-Path $CheckpointFile)) {
     }
 }
 
-function Record-Checkpoint {
+function Save-Checkpoint {
     param (
         [string]$StepName
     )
@@ -190,12 +190,13 @@ if (Test-StepCompleted -StepName "WindowsUpdates") {
     Write-Log "STEP 1: Windows Updates configuration already completed. Skipping..."
 } elseif ($SkipUpdates) {
     Write-Log "STEP 1: Windows Updates configuration skipped as requested."
-    Record-Checkpoint -StepName "WindowsUpdates"
+    Save-Checkpoint -StepName "WindowsUpdates"
 } else {
     Write-Log "STEP 1: Configuring Windows Updates to 'Notify for download and notify for install'..."
     try {
         Write-Log "Setting Windows Update service (wuauserv) to Automatic (Delayed Start)..."
-        Set-Service -Name wuauserv -StartupType AutomaticDelayedStart
+        Set-Service -Name wuauserv -StartupType Automatic
+        $null = & sc.exe config wuauserv start= delayed-auto
         Start-Service -Name wuauserv -ErrorAction SilentlyContinue
 
         Write-Log "Setting Update Orchestrator Service (UsoSvc) to Manual..."
@@ -212,7 +213,7 @@ if (Test-StepCompleted -StepName "WindowsUpdates") {
         Set-ItemProperty -Path $RegistryPath -Name "ScheduledInstallTime" -Value 3 -Type DWord -Force
 
         Write-Log "Windows Update configured to notify before download and install." -Type "SUCCESS"
-        Record-Checkpoint -StepName "WindowsUpdates"
+        Save-Checkpoint -StepName "WindowsUpdates"
     }
     catch {
         Write-Log "Error configuring Windows Updates: $($_.Exception.Message)" -Type "ERROR"
@@ -226,7 +227,7 @@ if (Test-StepCompleted -StepName "WSL") {
     Write-Log "STEP 2: WSL setup already completed. Skipping..."
 } elseif ($SkipWSL) {
     Write-Log "STEP 2: WSL setup skipped as requested."
-    Record-Checkpoint -StepName "WSL"
+    Save-Checkpoint -StepName "WSL"
 } else {
     Write-Log "STEP 2: Enabling WSL Features, setting up WSL 2, and installing Ubuntu..."
     try {
@@ -284,7 +285,7 @@ echo "Restart your WSL terminal and run 'nvm install --lts' to install Node.js."
         Write-Log "Created WSL setup script at: $WSLSetupScriptPath" -Type "SUCCESS"
         Write-Log "After setting up your Ubuntu WSL user, run: 'cp /mnt/c/Users/$(whoami)/wsl-setup.sh ~/ && chmod +x ~/wsl-setup.sh && ~/wsl-setup.sh'"
 
-        Record-Checkpoint -StepName "WSL"
+        Save-Checkpoint -StepName "WSL"
     }
     catch {
         Write-Log "Error during WSL/Ubuntu setup: $($_.Exception.Message)" -Type "ERROR"
@@ -362,7 +363,7 @@ if (Test-StepCompleted -StepName "Tools") {
             }
         }
 
-        Record-Checkpoint -StepName "Tools"
+        Save-Checkpoint -StepName "Tools"
     }
 }
 
@@ -432,7 +433,7 @@ if (Test-StepCompleted -StepName "NodeJS") {
             Write-Log "Ensure NVM for Windows installed correctly. You may need to install Node.js manually using NVM in a new terminal."
         }
 
-        Record-Checkpoint -StepName "NodeJS"
+        Save-Checkpoint -StepName "NodeJS"
     }
     catch {
         Write-Log "Error during NVM Node.js LTS installation: $($_.Exception.Message)" -Type "ERROR"
@@ -454,7 +455,7 @@ if (Test-StepCompleted -StepName "DarkTheme") {
         Set-ItemProperty -Path $RegistryPath -Name "AppsUseLightTheme" -Value 0 -Type DWord -Force
         Set-ItemProperty -Path $RegistryPath -Name "SystemUsesLightTheme" -Value 0 -Type DWord -Force
         Write-Log "System apps color theme set to Dark. May require sign out/in." -Type "SUCCESS"
-        Record-Checkpoint -StepName "DarkTheme"
+        Save-Checkpoint -StepName "DarkTheme"
     }
     catch {
         Write-Log "Error setting dark theme: $($_.Exception.Message)" -Type "ERROR"
@@ -535,7 +536,7 @@ if ((-not $SkipGitConfig) -and (-not (Test-StepCompleted -StepName "GitConfig"))
                 Write-Log "Git configurations applied" -Type "SUCCESS"
             }
 
-            Record-Checkpoint -StepName "GitConfig"
+            Save-Checkpoint -StepName "GitConfig"
             Write-Log "Git configuration completed successfully." -Type "SUCCESS"
         }
     } catch {
@@ -554,7 +555,7 @@ if (Test-StepCompleted -StepName "DefenderExclusions") {
     Write-Log "STEP 7: Windows Defender exclusions already configured. Skipping..."
 } elseif ($NoDefenderExclusions) {
     Write-Log "STEP 7: Windows Defender exclusions skipped as requested."
-    Record-Checkpoint -StepName "DefenderExclusions"
+    Save-Checkpoint -StepName "DefenderExclusions"
 } else {
     Write-Log "STEP 7: Adding Windows Defender exclusions for development directories..."
     try {
@@ -605,7 +606,7 @@ if (Test-StepCompleted -StepName "DefenderExclusions") {
         }
 
         Write-Log "Windows Defender exclusions added for development directories and processes." -Type "SUCCESS"
-        Record-Checkpoint -StepName "DefenderExclusions"
+        Save-Checkpoint -StepName "DefenderExclusions"
     } catch {
         Write-Log "Error setting up Windows Defender exclusions: $($_.Exception.Message)" -Type "ERROR"
     }
@@ -754,7 +755,7 @@ if ((-not $SkipGitConfig) -and (-not (Test-StepCompleted -StepName "GitUserConfi
                 Write-Log "Git user information already configured. Username: $existingUserName, Email: $existingUserEmail"
             }
 
-            Record-Checkpoint -StepName "GitUserConfig"
+            Save-Checkpoint -StepName "GitUserConfig"
             Write-Log "Git configuration check completed successfully." -Type "SUCCESS"
         }
     } catch {
