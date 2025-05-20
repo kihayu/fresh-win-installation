@@ -38,14 +38,23 @@ Automate the setup of a Windows machine for web development and general producti
 
 ## 💻 Usage
 
+### Temporarily Allow Script Execution
+By default, Windows PowerShell execution policies might prevent running scripts. To temporarily bypass this restriction for a single execution:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\fresh-install.ps1
+```
+
 ### Basic Usage
+After the first run, you can run the script without the execution policy override:
+
 ```powershell
 .\fresh-install.ps1
 ```
 
 ### Advanced Usage
 ```powershell
-.\fresh-install.ps1 -CustomTools @{"WebStorm" = "JetBrains.WebStorm"} -RebootWhenDone
+.\fresh-install.ps1 -CustomTools @{"WebStorm" = "JetBrains.WebStorm"}
 ```
 
 ## ⚙️ Parameters
