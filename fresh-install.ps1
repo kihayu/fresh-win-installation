@@ -35,7 +35,7 @@
 .EXAMPLE
     .\fresh-install.ps1 -CustomTools @{"WebStorm" = "JetBrains.WebStorm"}
 .NOTES
-    Version: 1.0
+    Version: 1.0.1
     Author: Keanu Hie/AI
     Purpose: To streamline the setup of a new Windows environment for web developers.
 #>
